@@ -1,12 +1,16 @@
 import numpy as np
 from jax import grad
 
+def f(x):
+    return np.zeros(2)
+
+def g(x):
+    return np.eye(2)
+
 def dynamics(x, u):
     """
     Creates the control affine dynamics for single integrator.
     """
-    f = lambda y : 0
-    g = lambda y : np.eye(2)
     return f(x) + g(x) @ u
 
 def cbf_safe_dist(x_diff: np.ndarray, d_safe):
@@ -19,19 +23,19 @@ def cbf_safe_dist(x_diff: np.ndarray, d_safe):
     """
     return -x_diff.T @ x_diff + d_safe**2 
 
-def grad_f(f, argnums=0):
-    """
-    Computes the gradient of f with respect to variable at argnums in f.
-
-    Eg. if f = cbf_safe_dist(x, d_safe) then it computes the gradient of f with respect to x when argnums = 0
-    """
-    return grad(f, argnums)
-
-def grad_f_at(f, x_diff, d_safe, argnums=0):
+def grad_f(f, params, argnums=0):
     """
     Computes the gradient of f with respect to variable at argnums in f and evaluetes at (x_diff, d_safe)
     """
-    return np.array(grad_f(f, argnums)(x_diff, d_safe))
+    params_tuple = tuple(params)
+    grad_f = grad(f, argnums)
+    grad_value = grad_f(*params_tuple)
+    return np.array(grad_value)
+
+def lie_derivative(h_func, f_func, params, argnums=0):
+    grad_h = grad_f(h_func, params, argnums)
+    f_x = f_func(params[argnums])
+    return grad_h.T @ f_x
 
 x_agent = np.array([1.0, -2.0])
 u_agent = np.array([-0.4, 0.2])
@@ -45,10 +49,8 @@ x_dot = dynamics(x_agent, u_agent) - dynamics(x_obs, u_obs) # difference of the 
 agent_rad = 0.5
 h = cbf_safe_dist(x_diff, agent_rad) # control barrier function h = norm**2 - dist**2
 
-grad_h = grad_f_at(cbf_safe_dist, x_diff, agent_rad)
-
-print(grad_h)
+grad_h = grad_f(cbf_safe_dist, params=[x_diff, agent_rad])
 lg_h = grad_h.T@x_dot
-print(lg_h)
 
-print(grad(cbf_safe_dist, argnums=0)(x_diff, agent_rad))
+print(lie_derivative(cbf_safe_dist, f, params=[x_diff, agent_rad]))
+
