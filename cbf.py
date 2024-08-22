@@ -85,12 +85,12 @@ def compute_lgh(q, obs):
     lg_h[0] = dh_dq[:, 0].T @ g1_q
     lg_h[1] = dh_dq[:, 0].T @ g2_q
 
-    return lg_h
+    return lg_h.reshape(1,2)
 
-def cbf_qp_controller(u_nom, h, hdot, gamma=1.0):
+def cbf_qp_controller(u_nom, h, Lfh, Lgh, gamma=1.0):
     opti = ca.Opti()
     u_safe = opti.variable(2,1)
-    opti.subject_to(hdot + gamma*h >= 0)
+    opti.subject_to(Lfh +  Lgh @ u_safe[:2] + gamma*h >= 0)
     opti.set_initial(u_safe, u_nom)
     cost_func = (u_safe - u_nom).T @ (u_safe - u_nom)
     opti.minimize(cost_func)
@@ -98,6 +98,6 @@ def cbf_qp_controller(u_nom, h, hdot, gamma=1.0):
     opti.solver("ipopt", option)
     sol = opti.solve()
     u_safe_opti = sol.value(u_safe)
-    return u_safe_opti
+    return u_safe_opti.reshape(2,1)
 
 
