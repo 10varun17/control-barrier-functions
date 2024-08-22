@@ -46,10 +46,14 @@ def non_linear_transform(delx, dely, x_r, curr_yaw):
 
     return v, omega
 
-def control_barrier_function(q, obs : CircleObstacle):
+def compute_h(q, obs : CircleObstacle):
     xo, yo, ro = obs.get_x(), obs.get_y(), obs.get_radius()
     x, y = q[0, 0], q[1, 0]
     return (x - xo)**2 + (y - yo)**2 - ro**2
+
+def compute_hdot(q, qdot, obs: CircleObstacle):
+    qo = np.array([obs.get_x(), obs.get_y(), obs.get_radius()]).reshape(3,1)
+    return 2 * (q[:2, 0] - qo[:2, 0]).T @ qdot[:2, 0]
 
 def cbf_safe_dist(x_diff: np.ndarray, d_safe):
     """
