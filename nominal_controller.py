@@ -1,6 +1,6 @@
 import numpy as np
 
-def nominal_controller(q, q_g):
+def control_law(q, q_g):
     return q_g[:2] - q[:2]
 
 def non_linear_transform(delx, dely, x_r, curr_yaw):
