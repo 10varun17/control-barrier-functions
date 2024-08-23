@@ -19,8 +19,8 @@ def animate(i):
 
     # Plot the goal
     plt.scatter(8., 4, c="green", s = 90)
-    plt.scatter(x, y, c="blue", s=45)
-    plt.title("Trajectory of the robot")
+    plt.scatter(x, y, c="blue", s=15)
+    plt.title("Trajectory of the robot with CBF-enabled")
     plt.tight_layout()
     plt.axis([0, 10, 0, 5])
 

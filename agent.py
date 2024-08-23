@@ -7,7 +7,7 @@ class Agent:
         self._y_next = y0
         self._yaw_next = yaw0
         self._q = self._q0
-        self._dt = 0.0001
+        self._dt = 0.001
 
     def get_state(self):
         return self._q

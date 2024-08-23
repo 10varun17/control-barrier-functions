@@ -39,9 +39,20 @@ while dist_to_goal > 0.1:
     omega = min(max(-omega_max, omega), omega_max)
     u_nom[0][0] = v
     u_nom[1][0] = omega
-    
-    print(f"control input: {u_nom.reshape(2,)}")
-    robot.update_state(u_nom)
+
+    # ### optimize the control input to keep the robot within the safe set
+    # get the control barrier function
+    h = cbf_utils.compute_h(q_curr, obs)
+
+    # compute the lie derivatives
+    lf_h = cbf_utils.compute_lfh(q_curr, obs)
+    lg_h = cbf_utils.compute_lgh(q_curr, obs)
+
+    # optimize the control input
+    u_safe = cbf_utils.cbf_qp_controller(u_nom, h, lf_h, lg_h)
+
+    # send the control input to the robot
+    robot.update_state(u_safe)
 
     # write the data to csv file
     with open(csv_file, "a") as outfile:
@@ -54,7 +65,5 @@ while dist_to_goal > 0.1:
 
         csv_writer.writerow(data)
     
-    dist_to_goal = np.linalg.norm(robot.get_state()[:2] - q_goal[:2])
-    print(f"Curr state: {q_curr[:2].reshape(2,)}")
-    
+    dist_to_goal = np.linalg.norm(robot.get_state()[:2] - q_goal[:2]) 
 
